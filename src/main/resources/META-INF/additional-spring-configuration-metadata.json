@@ -1,0 +1,14 @@
+{"properties": [
+  {
+    "name": "jwt.expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.expiration'",
+    "defaultValue": "your-secure-256-bit-secret-key"
+  },
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.secret'",
+    "defaultValue": 3600000
+  }
+]}

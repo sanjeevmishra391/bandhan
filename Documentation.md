@@ -71,6 +71,7 @@ Updates the user with the given ID. Only updates the fields that are provided (n
 **Validations:**
 - Ensure the user exists (search by `id`).
 - Validate required fields: `firstname`, `lastname`, `mobile`, `email`, `address`.
+- Admin can update anyone's info. Customer can update it's own info.
 
 ---
 
@@ -85,4 +86,5 @@ Soft deletes the user by marking their status as `DEACTIVATED`.
 **Validations:**
 - Ensure the user with the given `id` exists.
 
----
+
+## Event Service

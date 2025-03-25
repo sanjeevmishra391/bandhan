@@ -6,18 +6,22 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.bandhan.entity.User;
+import com.bandhan.enums.UserRole;
 import com.bandhan.enums.UserStatus;
 import com.bandhan.exception.BadRequestException;
 import com.bandhan.exception.ResourceNotFoundException;
 import com.bandhan.repository.UserRepository;
 import com.bandhan.specification.UserSpecification;
 import com.bandhan.utils.UserUtils;
+import com.bandhan.utils.Util;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -26,8 +30,12 @@ public class UserService implements UserDetailsService {
 
     public Map<String, Object> getUserList() {
         List<User> users = userRepository.findByUserStatus(UserStatus.ACTIVE);
-        return Map.of("message", "User list",
-                "result",  UserUtils.sanitizeUser(users));
+        return Util.response("User list", UserUtils.userResponse(users), "success");
+    }
+
+    public Map<String, Object> getUserById(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new BadRequestException("User id is not valid"));
+        return Util.response("User details with user id " + id, user, "success");
     }
 
     public Map<String, Object> searchUsers(Long id, String firstName, String lastName, String mobile, String email, String address) {
@@ -41,15 +49,21 @@ public class UserService implements UserDetailsService {
                                                 .and(UserSpecification.hasEmail(email));
 
         List<User> users = userRepository.findAll(spec);
-
-        return Map.of("message", "Search result",
-            "result", UserUtils.sanitizeUser(users));
+        return Util.response("Search result", UserUtils.userResponse(users), "success");
     }
 
     public Map<String, Object> updateUserById(Long id, User user) {
         // check if id exists
         User existingUser = userRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+
+        User loggedUser = getAuthenticatedUser();
+            
+        // if current user is ADMIN > allow updating anyone's data
+        // if current user is CUSTOMER > self data can only be updated
+        if(loggedUser.getUserRole().equals(UserRole.CUSTOMER) && loggedUser.getId() != existingUser.getId()) {
+            throw new BadRequestException("The current user with id " +  loggedUser.getId() + " cannot update other user's data");
+        }
     
         // Check if the user is active
         if (existingUser.getUserStatus() != UserStatus.ACTIVE) {
@@ -64,21 +78,36 @@ public class UserService implements UserDetailsService {
         Optional.ofNullable(user.getAddress()).ifPresent(existingUser::setAddress);
     
         User updatedUser = userRepository.save(existingUser);
-    
-        return Map.of(
-            "message", "User with id " + id + " has been updated successfully",
-            "result",  UserUtils.sanitizeUser(updatedUser)
-        );
+
+        return Util.response("User with id " + id + " has been updated successfully", UserUtils.userResponse(updatedUser), "success");
     }
     
     public Map<String, Object> deleteUserById(long id) {
         User user = userRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
 
+        User loggedUser = getAuthenticatedUser();
+
+        // if current user is ADMIN > allow deleting anyone's data
+        // if current user is CUSTOMER > self data can only be deleted
+        if(loggedUser.getUserRole().equals(UserRole.CUSTOMER) && loggedUser.getId() != user.getId()) {
+            throw new BadRequestException("The current user with id " + loggedUser.getId() + " cannot delete other user's data");
+        }
+
+        if(user.getUserStatus() == UserStatus.DEACTIVATED) {
+            throw new BadRequestException("The user with id " + user.getId() + " is already deactivated");
+        }
+
         user.setUserStatus(UserStatus.DEACTIVATED);
         userRepository.save(user);
 
-        return Map.of("message", "User with id " + id + " has been deactivated successfully");
+        return Util.response("User with id " + id + " has been deactivated successfully", "success");
+    }
+
+    public User getAuthenticatedUser() {
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final User user = (User) authentication.getPrincipal();
+        return userRepository.findById(user.getId()).get();
     }
 
     @Override

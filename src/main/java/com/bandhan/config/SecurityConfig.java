@@ -48,8 +48,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/user/cust/**").hasAnyAuthority(UserRole.ADMIN.name(), UserRole.CUSTOMER.name()) // Accessible by both
-                        .requestMatchers("/user/**").hasAuthority(UserRole.ADMIN.name()) // Only ADMIN can access
+                        .requestMatchers("/user/cust/**", "/event/cust/**", "/event_category/cust/**", "/facility/cust/**", "/facility_provider/cust/**", "/booking/cust/**").hasAnyAuthority(UserRole.ADMIN.name(), UserRole.CUSTOMER.name()) // Accessible by both
+                        .requestMatchers("/user/**", "/event/**", "/event_category/**", "/facility/**", "/facility_provider/**", "/booking/**").hasAuthority(UserRole.ADMIN.name()) // Only ADMIN can access
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

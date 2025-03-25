@@ -18,11 +18,21 @@ CREATE TABLE calendar_dates (
     description TEXT
 );
 
-CREATE TABLE events (
+CREATE TABLE event_categories (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     sub_category VARCHAR(100),
+    creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+);
+
+CREATE TABLE events (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    category_id INT REFERENCES event_categories(id) ON DELETE CASCADE,
+    status VARCHAR(20) NOT NULL,
     base_price DECIMAL(10,2) NOT NULL,
     creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
@@ -56,13 +66,13 @@ CREATE TABLE bookings (
 );
 
 CREATE TABLE booking_facilities (
-    id SERIAL PRIMARY KEY,
     booking_id INT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
     facility_id INT NOT NULL REFERENCES facilities(id) ON DELETE CASCADE,
     facility_cost DECIMAL(10,2) NOT NULL,
     facility_description TEXT,
     creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+    last_update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (booking_id, facility_id)
 );
 
 CREATE TABLE booking_dates (
@@ -71,8 +81,7 @@ CREATE TABLE booking_dates (
     start_time TIME,
     end_time TIME,
     PRIMARY KEY (booking_id, calendar_date),
-    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
-    FOREIGN KEY (calendar_date) REFERENCES calendar_dates(calendar_date) ON DELETE CASCADE
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
 );
 
 CREATE TABLE charges (

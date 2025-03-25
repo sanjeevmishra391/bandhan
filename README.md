@@ -1,5 +1,7 @@
 # Bandhan
 
+An application that helps party plot owner to keep track of bookings, events, users, revenue and expenses.
+
 ## Requirements
 ### Admin Dashboard:
 1. Can see bookings (customer, price, date, events, )
@@ -24,13 +26,24 @@ Stores user information
 - creation_date
 - last_update_date
 
+### Event_Category
+Stores the different categories of the event. Categories could be Wedding, Reception, Stay, Party etc
+
+- id
+- name
+- sub_category
+- description
+- creation_date
+- last_update_date
+
 ### Event
 Events such as Wedding, Reception, Stay, Party {Birthday, Anniversary, Others}
 - id
 - name
 - description
-- sub_category
+- category_id
 - base_price 
+- status {ACTIVE, INACTIVE}
 - creation_date
 - last_update_date
 
@@ -65,10 +78,6 @@ User booked for an event opting for some facilities and paid a price of the even
 - id
 - event_id
 - user_id
-- event_start_date date
-- event_end_date date
-- event_start_time
-- event_end_time 
 - agreed_price
 - status {CONFIRMED, CANCELLED, COMPLETED}
 - creation_date
@@ -84,6 +93,17 @@ Facilities opted for a booking
 - facility_description
 - creation_date
 - last_update_date
+
+### Calender_Dates
+- calendar_date
+- status {BLOCKED, PARTIALLY_BOOKED, FULLY_BOOKED}
+- description
+
+### Booking_Dates
+- booking_id
+- calendar_date
+- start_time
+- end_time
 
 ### Charges
 Charges incurred such as electricity, damage, additional
@@ -140,22 +160,8 @@ Entries for below items and more
 - carpet, tent, fog_light
 - plate, spoons, kadhai ...
 
-### Calender_Dates
-- calendar_date
-- status {BLOCKED, PARTIALLY_BOOKED, FULLY_BOOKED}
-- description
-
-### Booking_Dates
-- booking_id
-- calendar_date
-- start_time
-- end_time
-
 ### How the logic works?
 When a user books for an event, entry goes into booking table. He can also opt for some additional facility apart from the facilities included in the package. User is offered some price but he agrees at price. The additional facilities and electricity will be additional charges which will be inserted into charges table. Now customer can pay all in one payment or may take few payments to make the payment. For each payment entry is inserted into bill table. Expenses table store the expense incurred by the marriage hall and inventory store the item details which are present in inventory.
-
-### Issues
-- multi-day event handling
 
 ## Services
 1. Booking service:
@@ -163,7 +169,7 @@ When a user books for an event, entry goes into booking table. He can also opt f
 2. Calender service:
     getCalendarDates(), findDates(), findDatesByCriteria()
 3. User service:
-    getUser(), addUser(), 
+    signUp(), login(), getUser(), getAllUsers(), updateUsersById(), deleteUserById()
 4. Events service:
     getEvent(), addEvent(), deleteEvent()
 5. Facility service:
